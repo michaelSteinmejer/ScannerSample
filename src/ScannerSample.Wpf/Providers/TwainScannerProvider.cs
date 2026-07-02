@@ -213,11 +213,18 @@ namespace ScannerSample.Wpf.Providers
 
             private static void ApplyProfile(DataSource source, ScanProfile profile)
             {
+                TrySet(() => source.Capabilities.CapXferCount.SetValue(profile.MaxPages > 0 ? profile.MaxPages : -1));
                 TrySet(() => source.Capabilities.ICapXResolution.SetValue(profile.Dpi));
                 TrySet(() => source.Capabilities.ICapYResolution.SetValue(profile.Dpi));
                 TrySet(() => source.Capabilities.ICapPixelType.SetValue(ToTwainPixelType(profile.ColorMode)));
                 TrySet(() => source.Capabilities.CapFeederEnabled.SetValue(profile.UseFeeder ? BoolType.True : BoolType.False));
+                TrySet(() => source.Capabilities.CapAutoFeed.SetValue(profile.AutoFeed ? BoolType.True : BoolType.False));
                 TrySet(() => source.Capabilities.CapDuplexEnabled.SetValue(profile.Duplex ? BoolType.True : BoolType.False));
+                TrySet(() => source.Capabilities.CapIndicators.SetValue(profile.ShowIndicators ? BoolType.True : BoolType.False));
+                TrySet(() => source.Capabilities.ICapAutoDiscardBlankPages.SetValue(profile.DiscardBlankPages ? BlankPage.Auto : BlankPage.Disable));
+                TrySet(() => source.Capabilities.ICapAutomaticDeskew.SetValue(profile.AutoDeskew ? BoolType.True : BoolType.False));
+                TrySet(() => source.Capabilities.ICapAutomaticRotate.SetValue(profile.AutoRotate ? BoolType.True : BoolType.False));
+                TrySet(() => source.Capabilities.ICapAutomaticBorderDetection.SetValue(profile.AutoBorderDetection ? BoolType.True : BoolType.False));
             }
 
             private static PixelType ToTwainPixelType(ScanColorMode colorMode)

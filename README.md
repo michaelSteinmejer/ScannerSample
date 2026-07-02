@@ -16,33 +16,51 @@ WPF-projekt:
 
 - En WPF sample-app til .NET Framework 4.6.2.
 - En scanner-abstraktion via `IScannerProvider` og `IScannerSession`.
-- En `MockScannerProvider`, så appen kan testes uden fysisk scanner.
-- En `WiaScannerProvider`, som kan finde Windows WIA-scannere og scanne en side.
-- En `TwainScannerProvider` baseret på NTwain til Ricoh fi-8040 / PaperStream IP via TWAIN.
-- Progress events via `ScanProgress`, så UI kan vise status og thumbnails undervejs.
+- En `MockScannerProvider`, saa appen kan testes uden fysisk scanner.
+- En `WiaScannerProvider` til Windows WIA-scannere, multi-page, feeder og duplex hvor driveren understotter det.
+- En `TwainScannerProvider` baseret paa NTwain til Ricoh fi-8040 / fi-8170 / PaperStream IP via TWAIN.
+- Progress events via `ScanProgress`, saa UI kan vise status og thumbnails undervejs.
 - Output som individuelle PNG-sider eller multi-page TIFF.
 
-## Ricoh fi-8040 integration
+## Faelles scan features
 
-Ricoh fi-8040 / PaperStream IP bør kobles på i:
+`ScanProfile` bruges af begge rigtige providers og indeholder samme feature-oensker:
+
+- DPI
+- Farve/graa/sort-hvid
+- ADF/feeder
+- Auto feed
+- Duplex
+- Driver UI til/fra
+- Driver indicators til/fra
+- Max pages, hvor `0` betyder alle sider
+- Blank page discard
+- Auto deskew
+- Auto rotate
+- Auto border detection
+- Output som PNG-sider eller multi-page TIFF
+
+Vigtigt: baade TWAIN og WIA er driver-afhaengige. Provideren forsoger at saette hele feature-saettet, men ignorerer settings som den konkrete driver afviser.
+
+## Ricoh integration
+
+Ricoh fi-8040 og fi-8170 / PaperStream IP boer kobles paa via:
 
 `src\ScannerSample.Wpf\Providers\TwainScannerProvider.cs`
 
-Samplet bruger NTwain 3.7.6, som er den seneste stable-version på NuGet. Hvis Ricoh fi-8040 og PaperStream IP TWAIN-driveren er installeret, bør scanneren fremgå som en TWAIN-enhed i appens device-liste.
+Samplet bruger NTwain 3.7.6, som er den seneste stable-version paa NuGet. Hvis Ricoh/PaperStream IP TWAIN-driveren er installeret, boer scanneren fremgaa som en TWAIN-enhed i appens device-liste.
 
-Provideren sætter disse standardindstillinger, når driveren accepterer dem:
+TWAIN-koden koeres fra WPF UI-traaden, som allerede er STA og har message pump. Det er vigtigt for mange scannerdrivere.
 
-- DPI
-- Farve/grå/sort-hvid
-- ADF/feeder
-- Duplex
-- Driver UI til/fra
+## WIA multi-page og duplex
 
-TWAIN-koden køres fra WPF UI-tråden, som allerede er STA og har message pump. Det er vigtigt for mange scannerdrivere.
+`WiaScannerProvider` forsoger at saette WIA document handling til feeder og duplex via WIA device properties. Naar `UseFeeder` er slaaet til, scanner provideren i en loop og gemmer hver side som en separat PNG, indtil max pages er naaet, feederen melder tom, eller transfer stopper.
 
-Bemærk: jeg kan bygge integrationen her, men den endelige funktionstest kræver en maskine med Ricoh fi-8040 og PaperStream IP-driveren installeret.
+Avancerede WIA-features som blank page discard, deskew, rotate, border detection og indicators bliver matchet via WIA property-navne, fordi WIA-drivere varierer meget mellem producenter.
 
-## Kørsel
+Til robuste batch-jobs paa Ricoh fi-scannere boer TWAIN stadig bruges som primaer provider.
+
+## Koersel
 
 Byg fra roden:
 
@@ -50,19 +68,19 @@ Byg fra roden:
 dotnet build ScannerSample.sln
 ```
 
-Kør appen:
+Koer appen:
 
 ```powershell
 src\ScannerSample.Wpf\bin\Debug\net462\ScannerSample.Wpf.exe
 ```
 
-Appen viser altid en mock-scanner. Hvis maskinen har WIA-kompatible scannere installeret, vises de også.
+Appen viser altid en mock-scanner. Hvis maskinen har WIA-kompatible scannere installeret, vises de ogsaa.
 
 ## Provider-strategi
 
-De tre providers dækker de fleste almindelige scannerbehov:
+De tre providers daekker de fleste almindelige scannerbehov:
 
-- `TwainScannerProvider`: primær provider til Ricoh fi-8040, Ricoh fi-8170, Brother TWAIN og andre dokument-scannere.
+- `TwainScannerProvider`: primaer provider til Ricoh fi-8040, Ricoh fi-8170, Brother TWAIN og andre dokument-scannere.
 - `WiaScannerProvider`: fallback til simple Windows-scannere, MFP'er og scannere hvor TWAIN-driver ikke er installeret.
 - `MockScannerProvider`: test/demo uden fysisk scanner.
 
@@ -70,5 +88,5 @@ Andre providers kan give mening, hvis der er et konkret behov:
 
 - `PaperStreamProfileProvider`: hvis PaperStream-profiler skal styre avancerede Ricoh-indstillinger.
 - `WatchFolderProvider`: hvis eksisterende scanner-software allerede kan scanne til en mappe.
-- `SaneProvider`: hvis scanning senere skal understøttes på Linux.
+- `SaneProvider`: hvis scanning senere skal understottes paa Linux.
 - Vendor SDK-provider: hvis en bestemt producent tilbyder vigtige features, som TWAIN/WIA ikke eksponerer godt nok.

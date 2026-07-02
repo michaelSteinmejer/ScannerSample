@@ -7,6 +7,13 @@ namespace ScannerSample.Wpf.Models
         public bool Duplex { get; set; }
         public bool UseFeeder { get; set; }
         public bool ShowDriverUi { get; set; }
+        public bool AutoFeed { get; set; }
+        public bool ShowIndicators { get; set; }
+        public bool DiscardBlankPages { get; set; }
+        public bool AutoDeskew { get; set; }
+        public bool AutoRotate { get; set; }
+        public bool AutoBorderDetection { get; set; }
+        public int MaxPages { get; set; }
         public string OutputFolder { get; set; }
         public ScanOutputFormat OutputFormat { get; set; }
 
@@ -19,6 +26,13 @@ namespace ScannerSample.Wpf.Models
                 Duplex = true,
                 UseFeeder = true,
                 ShowDriverUi = true,
+                AutoFeed = true,
+                ShowIndicators = true,
+                DiscardBlankPages = false,
+                AutoDeskew = true,
+                AutoRotate = true,
+                AutoBorderDetection = true,
+                MaxPages = 0,
                 OutputFolder = outputFolder,
                 OutputFormat = ScanOutputFormat.PngPages
             };

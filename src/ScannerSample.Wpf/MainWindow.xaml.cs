@@ -123,6 +123,7 @@ namespace ScannerSample.Wpf
             var dpiItem = (ComboBoxItem)DpiComboBox.SelectedItem;
             var colorItem = (ComboBoxItem)ColorModeComboBox.SelectedItem;
             var outputItem = (ComboBoxItem)OutputFormatComboBox.SelectedItem;
+            var maxPagesItem = (ComboBoxItem)MaxPagesComboBox.SelectedItem;
 
             var profile = ScanProfile.Default(_outputFolder);
             profile.Dpi = int.Parse((string)dpiItem.Content, CultureInfo.InvariantCulture);
@@ -130,7 +131,16 @@ namespace ScannerSample.Wpf
             profile.OutputFormat = (ScanOutputFormat)Enum.Parse(typeof(ScanOutputFormat), (string)outputItem.Content);
             profile.Duplex = DuplexCheckBox.IsChecked == true;
             profile.UseFeeder = FeederCheckBox.IsChecked == true;
+            profile.AutoFeed = AutoFeedCheckBox.IsChecked == true;
             profile.ShowDriverUi = DriverUiCheckBox.IsChecked == true;
+            profile.ShowIndicators = IndicatorsCheckBox.IsChecked == true;
+            profile.DiscardBlankPages = BlankPagesCheckBox.IsChecked == true;
+            profile.AutoDeskew = DeskewCheckBox.IsChecked == true;
+            profile.AutoRotate = RotateCheckBox.IsChecked == true;
+            profile.AutoBorderDetection = BorderDetectionCheckBox.IsChecked == true;
+            profile.MaxPages = (string)maxPagesItem.Content == "All"
+                ? 0
+                : int.Parse((string)maxPagesItem.Content, CultureInfo.InvariantCulture);
             return profile;
         }
 
