@@ -82,8 +82,34 @@ namespace ScannerSample.Wpf.Providers
                 {
                     SupportsDuplex = true,
                     SupportsFeeder = true,
+                    CanCheckFeederLoaded = true,
+                    IsFeederLoaded = true,
+                    SupportsDoubleFeedDetection = true,
                     SupportsDriverUi = true
                 };
+            }
+
+            public ScannerPreflightResult Preflight(ScanProfile profile)
+            {
+                var capabilities = GetCapabilities();
+                if (!profile.UseFeeder)
+                {
+                    return ScannerPreflightResult.Success(capabilities, "Scanner ready.");
+                }
+
+                var deviceInfo = FindDeviceInfo(_device.Id);
+                if (deviceInfo == null)
+                {
+                    return ScannerPreflightResult.Blocked(capabilities, "The selected WIA scanner was not found.");
+                }
+
+                var device = Invoke(deviceInfo, "Connect");
+                var deviceProperties = GetProperty(device, "Properties");
+                capabilities.IsFeederLoaded = IsFeederReady(deviceProperties);
+
+                return capabilities.IsFeederLoaded
+                    ? ScannerPreflightResult.Success(capabilities, "Feeder ready.")
+                    : ScannerPreflightResult.Blocked(capabilities, "Laeg papir i feederen foer scanning.");
             }
 
             public Task<ScanResult> ScanAsync(ScanProfile profile, IProgress<ScanProgress> progress, CancellationToken cancellationToken)
@@ -112,6 +138,7 @@ namespace ScannerSample.Wpf.Providers
                     TrySetWiaProperty(itemProperties, HorizontalResolutionPropertyId, profile.Dpi);
                     TrySetWiaProperty(itemProperties, VerticalResolutionPropertyId, profile.Dpi);
                     TrySetWiaProperty(itemProperties, CurrentIntentPropertyId, ToWiaColorMode(profile.ColorMode));
+                    ApplyAdvancedDeviceProperties(deviceProperties, profile);
                     ApplyAdvancedItemProperties(itemProperties, profile);
 
                     var pages = ScanPages(profile, progress, cancellationToken, commonDialog, item, deviceProperties);
@@ -177,6 +204,13 @@ namespace ScannerSample.Wpf.Providers
                 TrySetNamedWiaProperty(itemProperties, profile.AutoRotate, "rotate");
                 TrySetNamedWiaProperty(itemProperties, profile.AutoBorderDetection, "border");
                 TrySetNamedWiaProperty(itemProperties, profile.ShowIndicators, "indicator");
+            }
+
+            private static void ApplyAdvancedDeviceProperties(object deviceProperties, ScanProfile profile)
+            {
+                TrySetNamedWiaProperty(deviceProperties, profile.DoubleFeedDetection, "double", "feed");
+                TrySetNamedWiaProperty(deviceProperties, profile.DoubleFeedDetection, "multifeed");
+                TrySetNamedWiaProperty(deviceProperties, profile.DoubleFeedDetection, "multi", "feed");
             }
 
             private static List<string> ScanPages(

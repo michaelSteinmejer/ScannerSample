@@ -39,8 +39,16 @@ namespace ScannerSample.Wpf.Providers
                 {
                     SupportsDuplex = true,
                     SupportsFeeder = true,
+                    IsFeederLoaded = true,
+                    CanCheckFeederLoaded = true,
+                    SupportsDoubleFeedDetection = true,
                     SupportsDriverUi = false
                 };
+            }
+
+            public ScannerPreflightResult Preflight(ScanProfile profile)
+            {
+                return ScannerPreflightResult.Success(GetCapabilities(), "Mock feeder is ready.");
             }
 
             public async Task<ScanResult> ScanAsync(ScanProfile profile, IProgress<ScanProgress> progress, CancellationToken cancellationToken)

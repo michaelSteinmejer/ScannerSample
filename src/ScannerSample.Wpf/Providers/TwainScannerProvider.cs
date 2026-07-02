@@ -51,8 +51,27 @@ namespace ScannerSample.Wpf.Providers
                 {
                     SupportsDuplex = CanReadCapability(_source.Capabilities.CapDuplexEnabled),
                     SupportsFeeder = CanReadCapability(_source.Capabilities.CapFeederEnabled),
+                    CanCheckFeederLoaded = CanReadCapability(_source.Capabilities.CapFeederLoaded),
+                    IsFeederLoaded = IsFeederLoaded(_source),
+                    SupportsDoubleFeedDetection = CanReadCapability(_source.Capabilities.CapDoubleFeedDetection),
                     SupportsDriverUi = true
                 };
+            }
+
+            public ScannerPreflightResult Preflight(ScanProfile profile)
+            {
+                var capabilities = GetCapabilities();
+                if (profile.UseFeeder && capabilities.CanCheckFeederLoaded && !capabilities.IsFeederLoaded)
+                {
+                    return ScannerPreflightResult.Blocked(capabilities, "Laeg papir i feederen foer scanning.");
+                }
+
+                if (profile.DoubleFeedDetection && !capabilities.SupportsDoubleFeedDetection)
+                {
+                    return ScannerPreflightResult.Success(capabilities, "Feeder ready. Double-feed detection is not exposed by this TWAIN driver.");
+                }
+
+                return ScannerPreflightResult.Success(capabilities, profile.UseFeeder ? "Feeder ready." : "Scanner ready.");
             }
 
             public Task<ScanResult> ScanAsync(ScanProfile profile, IProgress<ScanProgress> progress, CancellationToken cancellationToken)
@@ -225,6 +244,9 @@ namespace ScannerSample.Wpf.Providers
                 TrySet(() => source.Capabilities.ICapAutomaticDeskew.SetValue(profile.AutoDeskew ? BoolType.True : BoolType.False));
                 TrySet(() => source.Capabilities.ICapAutomaticRotate.SetValue(profile.AutoRotate ? BoolType.True : BoolType.False));
                 TrySet(() => source.Capabilities.ICapAutomaticBorderDetection.SetValue(profile.AutoBorderDetection ? BoolType.True : BoolType.False));
+                TrySet(() => source.Capabilities.CapDoubleFeedDetection.SetValue(profile.DoubleFeedDetection ? DoubleFeedDetection.Ultrasonic : DoubleFeedDetection.ByLength));
+                TrySet(() => source.Capabilities.CapDoubleFeedDetectionSensitivity.SetValue(DoubleFeedDetectionSensitivity.Medium));
+                TrySet(() => source.Capabilities.CapDoubleFeedDetectionResponse.SetValue(DoubleFeedDetectionResponse.Stop));
             }
 
             private static PixelType ToTwainPixelType(ScanColorMode colorMode)
@@ -245,6 +267,18 @@ namespace ScannerSample.Wpf.Providers
                 try
                 {
                     return capability.CanGetCurrent;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+
+            private static bool IsFeederLoaded(DataSource source)
+            {
+                try
+                {
+                    return source.Capabilities.CapFeederLoaded.GetCurrent() == BoolType.True;
                 }
                 catch
                 {

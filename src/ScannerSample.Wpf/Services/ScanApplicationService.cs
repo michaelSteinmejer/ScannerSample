@@ -52,5 +52,19 @@ namespace ScannerSample.Wpf.Services
                 return await session.ScanAsync(profile, progress, cancellationToken);
             }
         }
+
+        public ScannerPreflightResult Preflight(ScannerDevice device, ScanProfile profile)
+        {
+            var provider = _providers.FirstOrDefault(x => string.Equals(x.Name, device.ProviderName, StringComparison.OrdinalIgnoreCase));
+            if (provider == null)
+            {
+                throw new InvalidOperationException("No scanner provider was found for " + device.ProviderName + ".");
+            }
+
+            using (var session = provider.Open(device))
+            {
+                return session.Preflight(profile);
+            }
+        }
     }
 }

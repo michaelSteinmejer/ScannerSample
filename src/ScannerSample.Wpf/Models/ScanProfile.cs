@@ -13,6 +13,7 @@ namespace ScannerSample.Wpf.Models
         public bool AutoDeskew { get; set; }
         public bool AutoRotate { get; set; }
         public bool AutoBorderDetection { get; set; }
+        public bool DoubleFeedDetection { get; set; }
         public int MaxPages { get; set; }
         public string OutputFolder { get; set; }
         public ScanOutputFormat OutputFormat { get; set; }
@@ -32,6 +33,7 @@ namespace ScannerSample.Wpf.Models
                 AutoDeskew = true,
                 AutoRotate = true,
                 AutoBorderDetection = true,
+                DoubleFeedDetection = true,
                 MaxPages = 0,
                 OutputFolder = outputFolder,
                 OutputFormat = ScanOutputFormat.PngPages
